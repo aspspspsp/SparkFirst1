@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="a00970@192.168.1.119:22">
+    <serverData>
+      <paths name="a00970@192.168.1.119:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hadoop@master32:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/pys" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath path="/pys" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="hadoop@master32:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/hadoop/pys" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
