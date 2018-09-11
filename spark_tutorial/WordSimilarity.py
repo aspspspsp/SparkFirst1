@@ -15,7 +15,7 @@ def train(sparkUrl, dataForTrainPath, savePath):
     brp_path, model_path = get_model_save_path(savePath)
 
     # 載入數據
-    sc = get_conf(sparkUrl, 'LSH_train', "16g")
+    sc = get_conf(sparkUrl, 'LSH_train', "8g")
     df = load_word_data_frame(sc, dataForTrainPath)
 
     # 開始訓練模型
@@ -34,15 +34,15 @@ def train(sparkUrl, dataForTrainPath, savePath):
     model.transform(df).show()
 
 # LSH model parameter
-BUCKET_LENGTH = 50.0
+BUCKET_LENGTH = 1000.0
 NUM_HASH_TABLES = 100
 def main():
     local = False
-    sparkUrl = 'spark://master32:7077'
-    dataForTrainPath = 'hdfs://master32:9000/vectors/word_vector.vec'
+    sparkUrl = 'spark://ubuntu02:7077'
+    dataForTrainPath = 'hdfs://ubuntu02:9000/vectors/word_vector.vec'
     # dataForVaildPath = 'hdfs://master32:9000/pdfs/output_2018.csv'
 
-    savePath = 'hdfs://master32:9000/outout/word_models'
+    savePath = 'hdfs://ubuntu02:9000/outout/word_models'
 
     if local == True:
         sparkUrl = 'local'

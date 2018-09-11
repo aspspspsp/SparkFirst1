@@ -10,7 +10,7 @@ class HdfsHelper:
     IMG_FOLDER = ''
 
     # 關於雙namenode的backup處理方式，還需要再進行撰寫
-    def __init__(self, hdfs_addr='http://master32:50070', stopwords_path='/stopwords/stopwords.txt', vec_path='/vectors/word_vector.vec', img_folder='/image'):
+    def __init__(self, hdfs_addr='http://ubuntu02:50070', stopwords_path='/stopwords/stopwords.txt', vec_path='/vectors/word_vector.vec', img_folder='/image'):
         self.HDFS_ADDR = hdfs_addr
         self.STOPWORDS_PATH = stopwords_path
         self.VEC_PATH = vec_path

@@ -23,20 +23,28 @@ def load_sentence_data_frame(sc, dataPath):
         .options(header='true', inferschema='true') \
         .load(dataPath)
 
-    # 去除 [ 以及 ]
-    df = df.select(df['id'], df['sentence'], regexp_replace(df['vector'], "[\]\[]", "").alias("vector"))
+    # 複製欄位(vector)
+    df = df.withColumn("_vector", df['vector'])
 
-    # 分割字串並且轉型
-    df = df.select(df['id'], df['sentence'], split(df['vector'], "  ").cast("array<double>").alias("vector"))
+    # 去除_vector的 [ 以及 ]
+    df = df.select(df['id'], df['sentence'], df['vector'], regexp_replace(df['_vector'], "[\]\[]", "").alias("_vector"))
 
-    # 將double轉換為vector
+    # 分割_vector字串並且轉型
+    df = df.select(df['id'], df['sentence'], df['vector'], split(df['_vector'], "  ").cast("array<double>").alias("_vector"))
+
+    # 將double轉換為vectory再轉換為numpy array
     tmp = df.rdd.flatMap(lambda x: {
-        Row(x['id'], x['sentence'], Vectors.dense(x['vector']))
+        Row(x['id'], x['sentence'], x['vector'], Vectors.dense(x['_vector']))
     })
+
+    # 再轉換為dataframe
     df = SQLContext(sc).createDataFrame(tmp)\
             .selectExpr("_1 as id",
                         "_2 as sentence",
-                        "_3 as vector")
+                        "_3 as vector",
+                        "_4 as _vector")
+
+    # 回傳dataframe
     return df
 
 # 載入詞向量

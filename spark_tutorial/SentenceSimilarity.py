@@ -4,6 +4,8 @@
 from Utils.SparkUtil import get_conf, load_sentence_data_frame
 from pyspark.ml.feature import BucketedRandomProjectionLSH, BucketedRandomProjectionLSHModel
 from pyspark.ml.linalg import DenseVector
+from pyspark.ml import Pipeline
+from pyspark2pmml import PMMLBuilder
 
 def get_model_save_path(savePath):
     brp_path = savePath + '/brp'
@@ -11,12 +13,13 @@ def get_model_save_path(savePath):
 
     return brp_path, model_path
 
-def train(sparkUrl, dataForTrainPath, savePath):
+# 需要載入PMML的JAR才能導出
+def train_forPMML(sparkUrl, dataForTrainPath, savePath):
     # 取得模型存儲路徑
     brp_path, model_path = get_model_save_path(savePath)
 
     # 載入數據
-    sc = get_conf(sparkUrl, 'LSH_train', "16g")
+    sc = get_conf(sparkUrl, 'LSH_train', "8g")
     df = load_sentence_data_frame(sc, dataForTrainPath)
 
     # 開始訓練模型
@@ -25,22 +28,48 @@ def train(sparkUrl, dataForTrainPath, savePath):
         .setNumHashTables(NUM_HASH_TABLES) \
         .setInputCol("vector") \
         .setOutputCol("hash")
-    model = brp.fit(df)
 
-    # 存儲模型
-    brp.save(brp_path)
-    model.save(model_path)
+    # 流水線: 先提取特徵, 再訓練模型
+    pipeline = Pipeline(stages=[brp])
+    pipeline_model = pipeline.fit(df)
 
     # 顯示大概結果
-    model.transform(df).show()
+    # pipeline_model.transform(df).show()
+    # 存儲模型至PMML
+    pmmlBuilder = PMMLBuilder(sc, df, pipeline_model)
+    pmmlBuilder.buildFile("~/pmmlModels/SM.pmml")
     return
 
-def valid(sparkUrl, dataForTrainPath, dataForVaildPath, savePath):
+def train_forSpark(sparkUrl, dataForTrainPath, savePath):
     # 取得模型存儲路徑
     brp_path, model_path = get_model_save_path(savePath)
 
     # 載入數據
-    sc = get_conf(sparkUrl, 'LSH_valid', "4g")
+    sc = get_conf(sparkUrl, 'LSH_train', "8g")
+    df = load_sentence_data_frame(sc, dataForTrainPath)
+
+    # 開始訓練模型
+    brp = BucketedRandomProjectionLSH() \
+        .setBucketLength(BUCKET_LENGTH) \
+        .setNumHashTables(NUM_HASH_TABLES) \
+        .setInputCol("vector") \
+        .setOutputCol("hash")
+
+    model = brp.fit(df)
+
+    model.transform(df).show()
+
+    # # 存儲模型
+    # brp.save(brp_path)
+    # model.save(model_path)
+    return
+
+def validForSpark(sparkUrl, dataForTrainPath, dataForVaildPath, savePath):
+    # 取得模型存儲路徑
+    brp_path, model_path = get_model_save_path(savePath)
+
+    # 載入數據
+    sc = get_conf(sparkUrl, 'LSH_valid', "8g")
     dft = load_sentence_data_frame(sc, dataForTrainPath)
     dfv = load_sentence_data_frame(sc, dataForVaildPath)
 
@@ -90,20 +119,20 @@ def valid(sparkUrl, dataForTrainPath, dataForVaildPath, savePath):
     return
 
 # LSH model parameter
-BUCKET_LENGTH = 50.0
+BUCKET_LENGTH = 1000.0
 NUM_HASH_TABLES = 100
 
 def main():
     local = True
-    sparkUrl = 'spark://master32:7077'
-    dataForTrainPath = 'hdfs://master32:9000/pdfs/output.csv'
-    dataForVaildPath = 'hdfs://master32:9000/pdfs/output_2018.csv'
+    sparkUrl = 'spark://ubuntu02:7077'
+    dataForTrainPath = 'hdfs://ubuntu02:9000/vectors/sentences_vector_2018.csv'
+    dataForVaildPath = 'hdfs://ubuntu02:9000/vectors/sentences_vector_2018.csv'
 
-    savePath = 'hdfs://master32:9000/outout/models'
+    savePath = 'hdfs://ubuntu02:9000/outout/sentence_models'
 
     if local == True:
         sparkUrl = 'local'
 
-    # train(sparkUrl, dataForTrainPath, savePath)
-    valid(sparkUrl, dataForTrainPath, dataForVaildPath, savePath)
+    train_forPMML(sparkUrl, dataForTrainPath, savePath)
+    # valid(sparkUrl, dataForTrainPath, dataForVaildPath, savePath)
 main()

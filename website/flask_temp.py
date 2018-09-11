@@ -145,4 +145,4 @@ if __name__ == '__main__':
     word_vec_dict = hdfsHelper.get_vec_from_hdfs()
 
     app.run(debug=True,
-            host='master32')
+            host='ubuntu01')
